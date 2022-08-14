@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -e
+set -x
+set -u 
+
+root_dir=$(dirname $(readlink -e $0))
+tmp_dir=$root_dir/tmp_sap
+
+rm -fr $tmp_dir
+mkdir -p $tmp_dir
+
+source app.config
+
+read -p "Year:" year 
+read -p "Title:" title
+title_formatted=$(LC_ALL=C echo $title | tr '\0-\10\13\14\16-\37' '[ *]' | sed 's# #-#g')
+
+tmp_file=$tmp_dir/$title_formatted.pdf
+
+hp-scan -d$scanner_device -i --mode=$scanner_mode --resolution=$scanner_resolution --output=$tmp_file
+
