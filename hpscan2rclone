@@ -124,5 +124,9 @@ function upload() {
 cleanup
 scan
 upload
+if [ "$cleanup_after_done" == "true" ]
+then
+  cleanup
+fi
 
 log_info "Done."
