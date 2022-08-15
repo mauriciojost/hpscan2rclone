@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+
+set -e
+set -u 
+
+root_dir=$(dirname $(readlink -e $0))
+tmp_dir_name=tmp_sap
+tmp_dir=$root_dir/$tmp_dir_name
+default_title="$default_title_prefix-$(date '+%Y-%m-%d-%H')"
+
+source $root_dir/app.config
+
+if [[ "$debug_mode" == "true" ]]
+then
+  set -x
+fi
+
+function get_or_else() {
+  local value="$1"
+  local default="$2"
+  if [[ -z "$value" ]]
+  then
+    echo "$default"
+  else
+    echo "$value"
+  fi
+}
+
+echo "Scanning..."
+
+curr_year=$(date '+%Y')
+read -p "Year of the doc  [$curr_year] : " year 
+year_formatted=$(get_or_else "$year" "$curr_year")
+read -p "Title of the doc [$default_title] : " title
+title_formatted=$(get_or_else "$title" "$default_title")
+
+function cleanup() {
+  rm -fr $tmp_dir
+  mkdir -p $tmp_dir
+}
+
+function scan() {
+  for i in $(seq 1 $max_pages)
+  do
+    tmp_dir_year_title="$tmp_dir/$year_formatted/$title_formatted"
+    mkdir -p "$tmp_dir_year_title"
+    tmp_file="$tmp_dir_year_title/$title_formatted.$i.pdf"
+    hp-scan -d$scanner_device -i --mode=$scanner_mode --resolution=$scanner_resolution --output="$tmp_file"
+    read -p "Again? [Y/n]" again
+    if [[ "$again" == "n" ]] || [[ "$again" == "N" ]]
+    then
+      echo "We stop here."
+      break;
+    else
+      echo "Again!"
+      continue;
+    fi
+  done
+}
+
+function upload() {
+  for f in $(find $tmp_dir -type f)
+  do 
+    relative=$(echo $f | sed "s#$tmp_dir/##g")
+    echo rclone move $tmp_dir_name/$relative $google_dir_base/$(dirname $relative)
+  done
+}
+
+cleanup
+scan
+upload
