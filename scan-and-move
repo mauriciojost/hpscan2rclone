@@ -40,22 +40,23 @@ function cleanup() {
 }
 
 function scan() {
+  tmp_dir_year_title="$tmp_dir/$year_formatted/$title_formatted"
+  mkdir -p "$tmp_dir_year_title"
   for i in $(seq 1 $max_pages)
   do
-    tmp_dir_year_title="$tmp_dir/$year_formatted/$title_formatted"
-    mkdir -p "$tmp_dir_year_title"
     tmp_file="$tmp_dir_year_title/$title_formatted.$i.pdf"
     hp-scan -d$scanner_device -i --mode=$scanner_mode --resolution=$scanner_resolution --output="$tmp_file"
-    read -p "Again? [Y/n]" again
-    if [[ "$again" == "n" ]] || [[ "$again" == "N" ]]
-    then
-      echo "We stop here."
-      break;
-    else
-      echo "Again!"
-      continue;
-    fi
-  done
+    read -p "Now? [Stopandsync/Joinandsync/Addpage]" again
+    case "$again^^" in
+      "S")
+        break;
+      "J")
+        pdfunite "$tmp_dir_year_title/$title_formatted".*.pdf "$tmp_dir_year_title/$title_formatted-joined.pdf"
+        rm "$tmp_dir_year_title/$title_formatted".*.pdf 
+        break;
+      *)
+        continue;
+    esac
 }
 
 function upload() {

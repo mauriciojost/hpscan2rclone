@@ -1,8 +1,16 @@
 # README
 
-This simple application takes files from your HP scanner and puts them on the cloud via rclone.
+This simple console application scans files using your HP scanner and transfers them nicely on the cloud via rclone. It was written for use under Linux.
 
-# Intallation
+It relies on: 
+
+- [hplip](https://developers.hp.com/hp-linux-imaging-and-printing/gethplip) for the HP scanning
+- [rclone](https://rclone.org)
+- [pdfunite](https://man.archlinux.org/man/pdfunite.1.en)
+
+After installation and setup, launch the app providing title of scans and year. The scans will take place (one sheet or many). Then the app will sync the scanned files to the configured cloud provider. That's all.
+
+# a. Install the app
 
 ## 1. Install rclone
 
@@ -37,16 +45,32 @@ Then you will need to install `the` plugin (something like `hplip-3.22.6-plugin.
 
 As reference, you can take a look at [this documentation](https://www.systutorials.com/docs/linux/man/1-hp-scan/).
 
-## 2. Configure the app
+## 3. Install pdfunite
+
+It can be installed using your typical package manager, in Debian the package is called `poppler-utils`. In my case: 
+
+```
+sudo apt install poppler-utils
+```
+
+# b. Configure the app
 
 All configuration can be found in the file `app.config`. It's filled with default values as reference. You can customize any variables in there. Below a quick guide on how to setup the most important / mandatory variables.
 
-### Variable scanner_device
+## Variable `scanner_device`
 
 1. Run `scanimage -L`, you should see the name of your printer. 
 2. Set it up in `app.config` under the variable `scanner_device`. See the default value in the default `app.config` file as reference.
 
 
-### Variable google_dir_base
+## Variable `remote_dir_base`
 
 The format is `<rclone_drive_name>:<path>`. See the default value in the file as a reference.
+
+# c. Execute the app
+
+Just launch: 
+
+```
+scan-and-move
+```
