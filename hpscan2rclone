@@ -68,14 +68,14 @@ year_formatted=$(get_or_else "$year" "$curr_year")
 default_title="$default_title_prefix"
 log_info "Title of the doc [$default_title] : " 
 read title
-if [ "$add_date_title_suffix" == true ]
+if [ "$add_date_title_prefix" == true ]
 then
-  date_title_suffix="-$(date '+%Y-%m-%d-%H-%M-%S')"
+  date_title_prefix="$(date '+%Y-%m-%d-%H-%M-%S')-"
 else
-  date_title_suffix=""
+  date_title_prefix=""
 fi
-title_formatted="$(get_or_else "$(echo $title | sed 's# #-#g')" "$default_title")$date_title_suffix"
-log_info "Press enter to start scanning..." 
+title_formatted="$date_title_prefix$(get_or_else "$(echo $title | sed 's# #-#g')" "$default_title")"
+log_info "Press enter to start scanning(title=$title_formatted, year=$year_formatted)..." 
 read 
 
 function cleanup() {
