@@ -6,7 +6,6 @@ set -u
 root_dir=$(dirname $(readlink -e $0))
 tmp_dir_name=tmp_sap
 tmp_dir=$root_dir/$tmp_dir_name
-default_title="$default_title_prefix-$(date '+%Y-%m-%d-%H')"
 
 source $root_dir/app.config
 
@@ -33,6 +32,7 @@ read -p "Year of the doc  [$curr_year] : " year
 year_formatted=$(get_or_else "$year" "$curr_year")
 read -p "Title of the doc [$default_title] : " title
 title_formatted=$(get_or_else "$title" "$default_title")
+default_title="$default_title_prefix-$(date '+%Y-%m-%d-%H')"
 
 function cleanup() {
   rm -fr $tmp_dir
