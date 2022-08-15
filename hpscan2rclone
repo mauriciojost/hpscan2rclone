@@ -93,15 +93,11 @@ function scan() {
     log_debug "Scanning $tmp_file... (logs in $hp_scan_log_file)"
     hp-scan -d$scanner_device -i --mode=$scanner_mode --resolution=$scanner_resolution --output="$tmp_file" &>> "$hp_scan_log_file"
     log_info "What to do now?"
-    log_info "  a*) Add new page"
-    log_info "  s)  Send as is"
-    log_info "  j)  Join and send"
+    log_info "  ENTER)     Scan new page"
+    log_info "  S + ENTER) Send"
     read commd
     case "${commd^^}" in
       S)
-        log_debug "Sync now..."
-        break;;
-      J)
         log_debug "Joining $i pages into $tmp_joined_file..."
         to_join_files=$(ls -rt "$tmp_dir_year_title/$title_formatted".*.pdf)
         log_debug "Files to join (in order): $to_join_files"
