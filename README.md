@@ -72,5 +72,5 @@ The format is `<rclone_drive_name>:<path>`. See the default value in the file as
 Just launch: 
 
 ```
-scan-and-move
+hpscan2rclone
 ```

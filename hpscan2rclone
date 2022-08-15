@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+
+set -e
+set -u 
+
+root_dir=$(dirname $(readlink -e $0))
+tmp_dir_name=tmp_sap
+tmp_dir=$root_dir/$tmp_dir_name
+logs_dir=$root_dir/logs
+mkdir -p "$logs_dir"
+hp_scan_log_file="$logs_dir/hp-scan.log"
+
+source $root_dir/app.config
+
+if [[ "$debug_mode" == "true" ]]
+then
+  set -x
+fi
+
+# for highlighting
+declare -A fg_color_map
+fg_color_map[black]=30
+fg_color_map[red]=31
+fg_color_map[green]=32
+fg_color_map[yellow]=33
+fg_color_map[blue]=34
+fg_color_map[magenta]=35
+fg_color_map[cyan]=36
+fg_color_map[gray]=90
+
+function highlight() {
+  if [ "$colored_logs_enabled" == "true" ]
+  then
+    fg_c=$(echo -e "\e[1;${fg_color_map[$1]}m")
+    c_rs=$'\e[0m'
+    sed -u s"/$2/$fg_c\0$c_rs/g"
+  else
+    cat -
+  fi
+}
+
+function log_debug() {
+  echo "$1" | highlight gray ".*"
+}
+
+function log_info() {
+  echo "$1" | highlight yellow ".*"
+}
+
+function get_or_else() {
+  local value="$1"
+  local default="$2"
+  if [[ -z "$value" ]]
+  then
+    echo "$default"
+  else
+    echo "$value"
+  fi
+}
+
+curr_year=$(date '+%Y')
+
+log_info "$0" 
+log_debug "Logs in $logs_dir"
+log_info "Year of the doc  [$curr_year] : " 
+read year
+year_formatted=$(get_or_else "$year" "$curr_year")
+default_title="$default_title_prefix-$(date '+%Y-%m-%d-%H-%M-%S')"
+log_info "Title of the doc [$default_title] : " 
+read title
+title_formatted=$(get_or_else "$(echo $title | sed 's# #-#g')" "$default_title")
+
+function cleanup() {
+  rm -fr $tmp_dir
+  mkdir -p $tmp_dir
+}
+
+function scan() {
+  tmp_dir_year_title="$tmp_dir/$year_formatted/$title_formatted"
+  tmp_joined_file="$tmp_dir_year_title/$title_formatted-joined.pdf"
+  mkdir -p "$tmp_dir_year_title"
+  for i in $(seq 1 $max_pages)
+  do
+    tmp_file="$tmp_dir_year_title/$title_formatted.$i.pdf"
+    log_debug "Scanning $tmp_file... (logs in $hp_scan_log_file)"
+    hp-scan -d$scanner_device -i --mode=$scanner_mode --resolution=$scanner_resolution --output="$tmp_file" &>> "$hp_scan_log_file"
+    log_info "What to do now?"
+    log_info "  a) Add page to the batch (no sync yet)"
+    log_info "  s) Stop and sync to remote"
+    log_info "  j) Join files into a single one and sync to remote"
+    read commd
+    case "${commd^^}" in
+      S)
+        log_debug "Sync now..."
+        break;;
+      J)
+        log_debug "Joining $i pages into $tmp_joined_file..."
+        to_join_files=$(ls -rt "$tmp_dir_year_title/$title_formatted".*.pdf)
+        log_debug "Files to join (in order): $to_join_files"
+        pdfunite $to_join_files "$tmp_joined_file"
+        rm "$tmp_dir_year_title/$title_formatted".*.pdf 
+        break;;
+      *)
+        log_debug "Add a page ($i so far)..."
+        continue;;
+    esac
+  done
+}
+
+function upload() {
+  log_info "Uploading..."
+  for f in $(find $tmp_dir -type f)
+  do 
+    relative=$(echo $f | sed "s#$tmp_dir/##g")
+    src="$tmp_dir_name/$relative"
+    dst="$remote_dir_base/$(dirname $relative)"
+    log_debug "Uploading $src -> $dst..."
+    rclone move "$src" "$dst"
+  done
+}
+
+cleanup
+scan
+upload
+
+log_info "Done."
