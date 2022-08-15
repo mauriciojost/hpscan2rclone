@@ -65,10 +65,10 @@ log_debug "Logs in $logs_dir"
 log_info "Year of the doc  [$curr_year] : " 
 read year
 year_formatted=$(get_or_else "$year" "$curr_year")
-default_title="$default_title_prefix-$(date '+%Y-%m-%d-%H-%M-%S')"
+default_title="$default_title_prefix"
 log_info "Title of the doc [$default_title] : " 
 read title
-title_formatted=$(get_or_else "$(echo $title | sed 's# #-#g')" "$default_title")
+title_formatted="$(get_or_else "$(echo $title | sed 's# #-#g')" "$default_title")-$(date '+%Y-%m-%d-%H-%M-%S')"
 log_info "Press enter to start scanning..." 
 read 
 
