@@ -4,9 +4,9 @@ set -e
 set -u 
 
 root_dir=$(dirname $(readlink -e $0))
-tmp_dir_name=tmp_sap
-tmp_dir=$root_dir/$tmp_dir_name
-logs_dir=$root_dir/logs
+tmp_dir_name="tmp/tmp_sap_$(date '+%Y-%m-%d-%H-%M-%S')"
+tmp_dir="$root_dir/$tmp_dir_name"
+logs_dir="$root_dir/logs"
 mkdir -p "$logs_dir"
 hp_scan_log_file="$logs_dir/hp-scan.log"
 
@@ -69,10 +69,12 @@ default_title="$default_title_prefix-$(date '+%Y-%m-%d-%H-%M-%S')"
 log_info "Title of the doc [$default_title] : " 
 read title
 title_formatted=$(get_or_else "$(echo $title | sed 's# #-#g')" "$default_title")
+log_info "Press enter to start scanning..." 
+read 
 
 function cleanup() {
-  rm -fr $tmp_dir
-  mkdir -p $tmp_dir
+  rm -fr "$tmp_dir"
+  mkdir -p "$tmp_dir"
 }
 
 function scan() {
@@ -85,9 +87,9 @@ function scan() {
     log_debug "Scanning $tmp_file... (logs in $hp_scan_log_file)"
     hp-scan -d$scanner_device -i --mode=$scanner_mode --resolution=$scanner_resolution --output="$tmp_file" &>> "$hp_scan_log_file"
     log_info "What to do now?"
-    log_info "  a) Add page to the batch (no sync yet)"
-    log_info "  s) Stop and sync to remote"
-    log_info "  j) Join files into a single one and sync to remote"
+    log_info "  a*) Add new page"
+    log_info "  s)  Send as is"
+    log_info "  j)  Join and send"
     read commd
     case "${commd^^}" in
       S)
@@ -101,7 +103,7 @@ function scan() {
         rm "$tmp_dir_year_title/$title_formatted".*.pdf 
         break;;
       *)
-        log_debug "Add a page ($i so far)..."
+        log_debug "$i pages so far, adding a new one..."
         continue;;
     esac
   done
