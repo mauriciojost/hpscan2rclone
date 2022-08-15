@@ -31,8 +31,8 @@ curr_year=$(date '+%Y')
 read -p "Year of the doc  [$curr_year] : " year 
 year_formatted=$(get_or_else "$year" "$curr_year")
 read -p "Title of the doc [$default_title] : " title
-title_formatted=$(get_or_else "$title" "$default_title")
 default_title="$default_title_prefix-$(date '+%Y-%m-%d-%H')"
+title_formatted=$(get_or_else "$title" "$default_title")
 
 function cleanup() {
   rm -fr $tmp_dir
