@@ -119,7 +119,7 @@ function upload() {
     src="$tmp_dir_name/$relative"
     dst="$remote_dir_base/$(dirname $relative)"
     log_debug "Uploading $src -> $dst..."
-    rclone move "$src" "$dst"
+    rclone copy "$src" "$dst"
   done
 }
 
